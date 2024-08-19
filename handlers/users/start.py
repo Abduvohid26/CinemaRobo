@@ -51,7 +51,7 @@ async def start_bot(message: types.Message):
 @dp.inline_query()
 async def inline_handler(inline_query: types.InlineQuery):
     """
-    Handle inline queries and respond with video results.
+    Handle inline queries and respond with video_send.py results.
     """
     try:
         film_id = int(inline_query.query)
@@ -62,7 +62,7 @@ async def inline_handler(inline_query: types.InlineQuery):
             video_url=message_url,
             description=f"ID: {film_id}",
             thumbnail_url='https://t.me/ulugbekhusain/49',
-            mime_type='video/mp4',
+            mime_type='video_send.py/mp4',
             caption="@super_cinema_robot"
         )
 

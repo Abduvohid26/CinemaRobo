@@ -1,22 +1,23 @@
 from aiogram import types, F, html
 from loader import bot, dp, db
-from states.my_state import TextSend
+from states.my_state import PhotoSend
 from filters.admin_bot import IsBotAdmin
 from aiogram.fsm.context import FSMContext
 from keyboards.default.buttons import get_before_url, send_button, admin_button
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from check_url import check_urls
-@dp.message(F.text == '📝 Text', IsBotAdmin())
+@dp.message(F.text == '📷 Rasm', IsBotAdmin())
 async def text_send(message: types.Message, state: FSMContext):
-    await message.answer(html.bold('Post textini yuboring'), reply_markup=get_before_url())
-    await state.set_state(TextSend.text)
+    await message.answer(html.bold('Post rasmini yuboring'), reply_markup=get_before_url())
+    await state.set_state(PhotoSend.photo)
 
-@dp.message(TextSend.text, IsBotAdmin())
+@dp.message(PhotoSend.photo, IsBotAdmin())
 async def get_message_text(message: types.Message, state: FSMContext):
-    if message.content_type == 'text':
+    if message.content_type == 'photo':
         await state.update_data(
             {
-                'text': message.text
+                'photo': message.photo[-1].file_id,
+                'caption': message.caption
             }
         )
         text = """
@@ -30,13 +31,13 @@ async def get_message_text(message: types.Message, state: FSMContext):
             [Ikkinchi matn + ikkinchi havola]
         """
         await message.answer(text=text, reply_markup=get_before_url())
-        await state.set_state(TextSend.url)
+        await state.set_state(PhotoSend.url)
     else:
-        await message.answer(html.bold('Post textini yuboring'), reply_markup=get_before_url())
-        await state.set_state(TextSend.text)
+        await message.answer(html.bold('Post Rasmini yuboring'), reply_markup=get_before_url())
+        await state.set_state(PhotoSend.photo)
 
 
-@dp.message(TextSend.url, IsBotAdmin())
+@dp.message(PhotoSend.url, IsBotAdmin())
 async def get_url(message: types.Message, state: FSMContext):
     if message.content_type == 'text':
         urls = check_urls(text=message.text)
@@ -54,9 +55,9 @@ async def get_url(message: types.Message, state: FSMContext):
             text = text.strip()
             btn.button(text=text, url=manzil)
         btn.adjust(1)
-        await message.answer(text=data['text'], reply_markup=btn.as_markup())
+        await message.answer_photo(photo=data['photo'], reply_markup=btn.as_markup(), caption=data['caption'])
         await message.answer(f"Agar tayyor bolsa '📤 Yuborish' tugmasini bosing!' tugmasini bosing", reply_markup=send_button())
-        await state.set_state(TextSend.check)
+        await state.set_state(PhotoSend.check)
     else:
         text = "Havolani quyidagi formatda yuborish:\n" \
                "[tugma matni+havola]\n" \
@@ -68,10 +69,10 @@ async def get_url(message: types.Message, state: FSMContext):
                "[Ikkinchi matn+ikkinchi havola]"
 
         await message.answer(text, reply_markup=get_before_url())
-        await state.set_state(TextSend.url)
+        await state.set_state(PhotoSend.url)
 
 
-@dp.message(F.text == '📤 Yuborish', IsBotAdmin(), TextSend.check)
+@dp.message(F.text == '📤 Yuborish', IsBotAdmin(), PhotoSend.check)
 async def send_message(message: types.Message, state: FSMContext):
     data = await state.get_data()
     users = db.select_all_users()
@@ -88,17 +89,16 @@ async def send_message(message: types.Message, state: FSMContext):
         counter = 0
         for i in users:
             try:
-                await bot.send_message(chat_id=i[-2], text=data['text'], reply_markup=btn.as_markup(row_width=1))
+                await bot.send_photo(chat_id=i[-2], photo=data['photo'], reply_markup=btn.as_markup(row_width=1), caption=data['caption'])
                 counter += 1
             except Exception as e:
                 print(e)
         await message.answer(f'{counter} kishiga xabar yuborildi', reply_markup=admin_button())
     else:
-        text = data['text']
         counter = 0
         for i in users:
             try:
-                await bot.send_message(text=text, chat_id=i[-2])
+                await bot.send_photo(photo=data['photo'], chat_id=i[-2])
                 counter += 1
             except Exception as e:
                 print(e)

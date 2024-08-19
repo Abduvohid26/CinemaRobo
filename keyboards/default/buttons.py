@@ -15,7 +15,7 @@ def rek_types():
     btn = ReplyKeyboardBuilder()
     btn.button(text='📝 Text')
     btn.button(text='📷 Rasm')
-    btn.button(text='📹 Vide')
+    btn.button(text='📹 Video')
     btn.button(text='🔙 Orqaga')
     btn.adjust(2)
     return btn.as_markup(resize_keyboard=True)
