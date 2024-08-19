@@ -21,7 +21,8 @@ async def start_bot(message: types.Message):
     except Exception as e:
         print(f'Nimadur xato ketti: {e}')
 
-    await message.answer(f"Assalomu alaykum {message.from_user.full_name}!")
+    await message.answer(f"Assalomu alaykum {message.from_user.full_name}!\n\n"
+                         f"✍🏻 Kino kodini yuboring.")
 
 
 @dp.message(lambda message: message.text.isdigit())
