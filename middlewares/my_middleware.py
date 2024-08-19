@@ -1,17 +1,13 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message,Update
-from aiogram.utils.keyboard import InlineKeyboardBuilder,InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import *
 from loader import bot
 from data.config import CHANNELS
 from utils.misc.subscription import checksubscription
 from aiogram.filters.callback_data import CallbackData
-
-
-class CheckSubCallback(CallbackData, prefix='check'):
-    check: bool
-
-
+class CheckSubCallback(CallbackData,prefix='check'):
+    check :bool
 class UserCheckMiddleware(BaseMiddleware):
     async def __call__(
         self,
@@ -19,9 +15,10 @@ class UserCheckMiddleware(BaseMiddleware):
         event: Update,
         data: Dict[str, Any]
     ) -> bool:
-        btn = InlineKeyboardBuilder()
+        btn  = InlineKeyboardBuilder()
         user = event.from_user
-        final_status = True
+        final_status  = True
+        print(CHANNELS)
         if CHANNELS:
             for channel in CHANNELS:
                 status = True
@@ -52,4 +49,5 @@ class UserCheckMiddleware(BaseMiddleware):
                 await event.answer("Iltimos bot to'liq ishlashi uchun quyidagi kanal(lar)ga obuna bo'ling!",
                                    reply_markup=btn.as_markup())
         else:
-            pass
+            return await handler(event, data)
+

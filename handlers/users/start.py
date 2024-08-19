@@ -79,7 +79,8 @@ async def inline_handler(inline_query: types.InlineQuery):
 
 
 @dp.callback_query(CheckSubCallback.filter())
-async def check_query(call: types.CallbackQuery):
+async def check_query(call:types.CallbackQuery):
+    print('Working')
     await call.answer(cache_time=60)
     user = call.from_user
     final_status = True
@@ -117,4 +118,6 @@ async def check_query(call: types.CallbackQuery):
                 await call.message.edit_text("Iltimos bot to'liq ishlashi uchun quyidagi kanal(lar)ga obuna bo'ling!",
                                              reply_markup=btn.as_markup())
     else:
-        pass
+        await call.message.answer(
+            "Siz hamma kanalga a'zo bo'lgansiz!"
+        )
