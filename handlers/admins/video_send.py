@@ -1,9 +1,9 @@
 from aiogram import types, F, html
 from loader import bot, dp, db
-from states.my_state import VideoSend
+from states.my_state import VideoSend, PhotoSend
 from filters.admin_bot import IsBotAdmin
 from aiogram.fsm.context import FSMContext
-from keyboards.default.buttons import get_before_url, send_button, admin_button
+from keyboards.default.buttons import get_before_url, send_button, admin_button, rek_types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from check_url import check_urls
 @dp.message(F.text == '📹 Video', IsBotAdmin())
@@ -34,8 +34,25 @@ async def get_message_text(message: types.Message, state: FSMContext):
         await state.set_state(VideoSend.url)
     else:
         await message.answer(html.bold('Post Videosini yuboring'), reply_markup=get_before_url())
-        await state.set_state(VideoSend.video)
+        await state.set_state(VideoSend.url)
 
+
+@dp.message(F.text == '🔙 Orqaga', IsBotAdmin(), VideoSend.video)
+async def render_admin_panel(message: types.Message, state: FSMContext):
+    await message.answer('Admin Panel', reply_markup=admin_button())
+    await state.clear()
+
+
+@dp.message(F.text == '📌 Bekor qilish', IsBotAdmin(), VideoSend.url)
+async def render_rek_type_panel(message: types.Message, state: FSMContext):
+    await message.answer('📲  Reklama yubiorish turini tanlang:', reply_markup=rek_types())
+    await state.clear()
+
+
+@dp.message(F.text == '📌 Bekor qilish', IsBotAdmin(), VideoSend.check)
+async def render_rek_type_panel(message: types.Message, state: FSMContext):
+    await message.answer('📲  Reklama yubiorish turini tanlang:', reply_markup=rek_types())
+    await state.clear()
 
 @dp.message(VideoSend.url, IsBotAdmin())
 async def get_url(message: types.Message, state: FSMContext):
@@ -70,6 +87,7 @@ async def get_url(message: types.Message, state: FSMContext):
 
         await message.answer(text, reply_markup=get_before_url())
         await state.set_state(VideoSend.url)
+
 
 
 @dp.message(F.text == '📤 Yuborish', IsBotAdmin(), VideoSend.check)

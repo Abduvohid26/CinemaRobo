@@ -3,7 +3,7 @@ from loader import bot, dp, db
 from states.my_state import TextSend
 from filters.admin_bot import IsBotAdmin
 from aiogram.fsm.context import FSMContext
-from keyboards.default.buttons import get_before_url, send_button, admin_button
+from keyboards.default.buttons import get_before_url, send_button, admin_button, rek_types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from check_url import check_urls
 @dp.message(F.text == '📝 Text', IsBotAdmin())
@@ -35,6 +35,20 @@ async def get_message_text(message: types.Message, state: FSMContext):
         await message.answer(html.bold('Post textini yuboring'), reply_markup=get_before_url())
         await state.set_state(TextSend.text)
 
+@dp.message(F.text == '🔙 Orqaga', IsBotAdmin(), TextSend.text)
+async def render_admin_panel(message: types.Message, state: FSMContext):
+    await message.answer('Admin Panel', reply_markup=admin_button())
+    await state.clear()
+
+@dp.message(F.text == '📌 Bekor qilish', IsBotAdmin(), TextSend.url)
+async def render_rek_type_panel(message: types.Message, state: FSMContext):
+    await message.answer('📲  Reklama yubiorish turini tanlang:', reply_markup=rek_types())
+    await state.clear()
+
+@dp.message(F.text == '📌 Bekor qilish', IsBotAdmin(), TextSend.check)
+async def render_rek_type_panel(message: types.Message, state: FSMContext):
+    await message.answer('📲  Reklama yubiorish turini tanlang:', reply_markup=rek_types())
+    await state.clear()
 
 @dp.message(TextSend.url, IsBotAdmin())
 async def get_url(message: types.Message, state: FSMContext):
