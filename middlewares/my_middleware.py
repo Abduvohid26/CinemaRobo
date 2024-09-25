@@ -6,6 +6,8 @@ from loader import bot
 from data.config import CHANNELS
 from utils.misc.subscription import checksubscription
 from aiogram.filters.callback_data import CallbackData
+
+
 class CheckSubCallback(CallbackData,prefix='check'):
     check :bool
 class UserCheckMiddleware(BaseMiddleware):
@@ -15,9 +17,9 @@ class UserCheckMiddleware(BaseMiddleware):
         event: Update,
         data: Dict[str, Any]
     ) -> bool:
-        btn  = InlineKeyboardBuilder()
+        btn = InlineKeyboardBuilder()
         user = event.from_user
-        final_status  = True
+        final_status = True
         print(CHANNELS)
         if CHANNELS:
             for channel in CHANNELS:
@@ -25,9 +27,10 @@ class UserCheckMiddleware(BaseMiddleware):
                 try:
                     status = await checksubscription(user_id=user.id, channel=channel)
                 except Exception as e:
-                    print(e)
-                    pass
-                final_status *= status
+                    print(f"Subscription check error: {e}")
+
+                final_status = final_status and status
+
                 try:
                     chat = await bot.get_chat(chat_id=channel)
                     if status:
@@ -37,17 +40,21 @@ class UserCheckMiddleware(BaseMiddleware):
                 except Exception as e:
                     print(e)
                     pass
+
             if final_status:
                 await handler(event, data)
             else:
-
                 btn.button(
                     text="🔄 Tekshirish",
                     callback_data=CheckSubCallback(check=False)
                 )
                 btn.adjust(1)
-                await event.answer("Iltimos bot to'liq ishlashi uchun quyidagi kanal(lar)ga obuna bo'ling!",
-                                   reply_markup=btn.as_markup())
+                await event.answer(
+                    "Iltimos bot to'liq ishlashi uchun quyidagi kanal(lar)ga obuna bo'ling!",
+                    reply_markup=btn.as_markup()
+                )
         else:
-            return await handler(event, data)
+            await handler(event, data)
+
+
 

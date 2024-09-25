@@ -8,7 +8,7 @@ from middlewares.my_middleware import CheckSubCallback
 from data.config import CHANNELS
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.exceptions import TelegramBadRequest
-
+import asyncio
 
 @dp.message(CommandStart())
 async def start_bot(message: types.Message):
@@ -78,46 +78,43 @@ async def inline_handler(inline_query: types.InlineQuery):
         print(f"Error handling inline query: {e}")
 
 
+
+
 @dp.callback_query(CheckSubCallback.filter())
-async def check_query(call:types.CallbackQuery):
-    print('Working')
-    await call.answer(cache_time=60)
+async def check_query(call: types.CallbackQuery):
+    await call.answer(cache_time=0)
     user = call.from_user
     final_status = True
     btn = InlineKeyboardBuilder()
+
     if CHANNELS:
         for channel in CHANNELS:
-            status = True
             try:
                 status = await checksubscription(user_id=user.id, channel=channel)
-            except Exception as e:
-                print(e)
-                pass
-            final_status *= status
-            try:
+                final_status = final_status and status
                 chat = await bot.get_chat(chat_id=channel)
-                if status:
-                    btn.button(text=f"✅ {chat.title}", url=f"{await chat.export_invite_link()}")
-                else:
-                    btn.button(text=f"❌ {chat.title}", url=f"{await chat.export_invite_link()}")
+                invite_link = await chat.export_invite_link()
+                btn.button(
+                    text=f"{'✅' if status else '❌'} {chat.title}",
+                    url=invite_link
+                )
             except Exception as e:
-                print(e)
-                pass
-        if final_status:
-            await call.message.answer(
-                "Siz hamma kanalga a'zo bo'lgansiz!"
-            )
-        else:
+                print(f"Kanalga kirish yoki linkni olishda xato: {e}")
 
+        if final_status:
+            await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
+                         f"✍🏻 Kino kodini yuboring.")
+        else:
             btn.button(
                 text="🔄 Tekshirish",
                 callback_data=CheckSubCallback(check=False)
             )
             btn.adjust(1)
-            with suppress(TelegramBadRequest):
-                await call.message.edit_text("Iltimos bot to'liq ishlashi uchun quyidagi kanal(lar)ga obuna bo'ling!",
-                                             reply_markup=btn.as_markup())
+            data = await call.message.answer(
+                text="Iltimos avval barcha kanallarga azo boling !"
+            )
+            await asyncio.sleep(5)
+            await data.delete()
     else:
-        await call.message.answer(
-            "Siz hamma kanalga a'zo bo'lgansiz!"
-        )
+        await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
+                         f"✍🏻 Kino kodini yuboring.")
