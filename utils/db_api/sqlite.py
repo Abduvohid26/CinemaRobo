@@ -1,4 +1,8 @@
 import sqlite3
+
+from pydantic.v1.validators import anystr_strip_whitespace
+
+
 class Database:
     def __init__(self, path_to_db="main.db"):
         self.path_to_db = path_to_db
@@ -68,8 +72,43 @@ class Database:
         sql = f"""
         UPDATE Users SET fullname=? WHERE telegram_id=?
         """
-        return self.execute(sql, parameters=(fullname, id), commit=True)
+        return self.execute(sql, parameters=(telegram_id, id), commit=True)
     def delete_users(self):
         self.execute("DELETE FROM Users WHERE TRUE", commit=True)
 
+
+    def create_cinema_table(self):
+        sql = """
+             CREATE TABLE Cinema(
+                id str,
+                main_id int,
+                post_id int
+             );
+        """
+        self.execute(sql, commit=True)
+
+    def add_cinema(self, id: str, main_id: int, post_id: int):
+        sql = """
+         INSERT INTO Cinema(id, main_id, post_id) VALUES(?,?,?)
+        """
+        self.execute(sql, parameters=(id, main_id, post_id), commit=True)
+
+    def select_all_cinema(self, main_id):
+        sql = """
+            SELECT * FROM Cinema Where main_id = ?
+        """
+        return self.execute(sql, parameters=(main_id, ), fetchall=True)
+
+
+    # def select_all_users(self):
+    #     sql = """
+    #     SELECT * FROM Users
+    #     """
+    #     return self.execute(sql, fetchall=True)
+    #
+    def select_cinema(self, **kwargs):
+        # SQL_EXAMPLE = "SELECT * FROM Users where id=1 AND Name='John'"
+        sql = "SELECT * FROM Cinema WHERE "
+        sql, parameters = self.format_args(sql, kwargs)
+        return self.execute(sql, parameters=parameters, fetchone=True)
 

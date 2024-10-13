@@ -1,4 +1,6 @@
 from aiogram.filters import CommandStart
+
+from filters import IsBotAdmin
 from loader import dp, db, bot
 from aiogram import types, F, html, suppress
 from keyboards.inline.buttons import buttons
@@ -7,9 +9,8 @@ from utils.misc.subscription import checksubscription
 from middlewares.my_middleware import CheckSubCallback
 from data.config import CHANNELS
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.exceptions import TelegramBadRequest
 import asyncio
-
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 @dp.message(CommandStart())
 async def start_bot(message: types.Message):
     try:
@@ -21,19 +22,37 @@ async def start_bot(message: types.Message):
     except Exception as e:
         print(f'Nimadur xato ketti: {e}')
 
-    await message.answer(f"Assalomu alaykum {message.from_user.full_name}!\n\n"
-                         f"✍🏻 Kino kodini yuboring.")
+    await message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=message.from_user.full_name, link=f"tg://user?id={message.from_user.id}")} botimizga xush kelibsiz.\n\n'
+                                   f'✍🏻 Kino kodini yuboring'))
 
+def create_serial_buttons(serials):
+    btn = InlineKeyboardBuilder()
+    i = 0
+    for serial in serials:
+        i += 1
+        btn.button(text=f"Serial {i}", callback_data=f"serial_{serial[2]}")
+    return btn.as_markup()
 
 @dp.message(lambda message: message.text.isdigit())
 async def get_cinema_number(message: types.Message):
     number = message.text
     try:
-        await bot.copy_message(chat_id=message.chat.id, from_chat_id="@testcuhun", message_id=number,
-                               reply_markup=buttons(film_id=number))
+        serials = db.select_all_cinema(main_id=number)
+        if serials:
+            await message.answer(text="Quyidagi seriallar mavjud:", reply_markup=create_serial_buttons(serials))
+        else:
+            await bot.copy_message(chat_id=message.chat.id, from_chat_id="@testcuhun", message_id=number,
+                                   reply_markup=buttons(film_id=number))
     except Exception as e:
         print(f'Nimadur xato ketti: {e}')
         await message.answer(' ❌ Kino kod no\'tog\'ri')
+
+@dp.callback_query(lambda c: c.data and c.data.startswith("serial_"))
+async def handle_serial_callback(call: types.CallbackQuery):
+    await call.answer(cache_time=60)
+    serial_id = call.data.split("_")[1]
+    await bot.copy_message(chat_id=call.message.chat.id, from_chat_id="@testcuhun", message_id=serial_id,
+                           reply_markup=buttons(film_id=serial_id))
 
 
 @dp.callback_query(lambda query: query.data.startswith('delete'))
@@ -44,7 +63,7 @@ async def delete_msg(callback_query: types.CallbackQuery):
 
 @dp.message(F.text)
 async def start_bot(message: types.Message):
-    await message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=message.from_user.full_name, link="")} botimizga xush kelibsiz.\n\n'
+    await message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=message.from_user.full_name, link=f"tg://user?id={message.from_user.id}")} botimizga xush kelibsiz.\n\n'
                                    f'✍🏻 Kino kodini yuboring'))
 
 

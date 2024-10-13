@@ -21,6 +21,7 @@ async def main():
         # Create Users Table
         try:
             db.create_table_users()
+            db.create_cinema_table()
         except:
             pass
         #############################

@@ -16,3 +16,20 @@ class VideoSend(StatesGroup):
     video = State()
     url = State()
     check = State()
+
+
+class VideoChannelSend(StatesGroup):
+    start = State()
+    caption = State()
+
+
+class VideoChannelSerialSend(StatesGroup):
+    start = State()
+    caption = State()
+
+
+class VideoChannelSerialSendExist(StatesGroup):
+    post_id = State()
+    start = State()
+    caption = State()
+

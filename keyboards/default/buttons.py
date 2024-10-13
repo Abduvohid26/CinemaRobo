@@ -4,6 +4,8 @@ def admin_button():
     btn = ReplyKeyboardBuilder()
     btn.button(text='📲 Reklama Yuborish')
     btn.button(text='👤 Obunachilar soni')
+    btn.button(text="🎦 Kino qo'shish")
+    btn.button(text="🎦 Serial qo'shish")
     # btn.button(text='Kanal qoshish')
     # btn.button(text='Kannnallar')
     # btn.button(text='Kanal o\'chirish')
