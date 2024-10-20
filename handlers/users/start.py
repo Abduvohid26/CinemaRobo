@@ -11,6 +11,8 @@ from data.config import CHANNELS
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+
 @dp.message(CommandStart())
 async def start_bot(message: types.Message):
     try:

@@ -26,7 +26,7 @@ def get_before_url():
     btn = ReplyKeyboardBuilder()
     btn.button(text='📌 Bekor qilish')
     btn.adjust(1)
-    return btn.as_markup(resize_keyboard=True)
+    return btn.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
 def send_button():
     btn = ReplyKeyboardBuilder()
