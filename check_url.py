@@ -26,8 +26,7 @@ async def get_data(chat_id):
     print('salom')
     db_path = 'data/main.db'
     if os.path.exists(db_path):
-        await bot.send_document(document=db_path, caption='Main db file', chat_id=chat_id)
-        return
+        with open(db_path, 'rb') as doc:
+            await bot.send_document(chat_id, document=doc, caption='Main db file')
     else:
-        await bot.send_message(text="Main db file topilamadi")
-    
+        await bot.send_message(chat_id, text="Main db file topilmadi")
