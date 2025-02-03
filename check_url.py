@@ -23,6 +23,7 @@ import os
 from loader import bot
 
 async def get_data(chat_id):
+    print('salom')
     db_path = 'data/main.db'
     if os.path.exists(db_path):
         await bot.send_document(document=db_path, caption='Main db file', chat_id=chat_id)
