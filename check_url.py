@@ -21,12 +21,14 @@ def check_urls(text):
         return havola
 import os
 from loader import bot
+from aiogram.types.input_file import FSInputFile
+
 
 async def get_data(chat_id):
     print('salom')
     db_path = 'data/main.db'
     if os.path.exists(db_path):
-        with open(db_path, 'rb') as doc:
-            await bot.send_document(chat_id, document=doc, caption='Main db file')
+        doc = FSInputFile(path=db_path)
+        await bot.send_document(chat_id, document=doc, caption='Main db file')
     else:
         await bot.send_message(chat_id, text="Main db file topilmadi")
