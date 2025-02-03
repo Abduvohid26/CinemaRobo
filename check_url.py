@@ -19,3 +19,14 @@ def check_urls(text):
                 else:
                     pass
         return havola
+import os
+from loader import bot
+
+async def get_data(chat_id):
+    db_path = 'data/main.db'
+    if os.path.exists(db_path):
+        await bot.send_document(document=db_path, caption='Main db file', chat_id=chat_id)
+        return
+    else:
+        await bot.send_message(text="Main db file topilamadi")
+    

@@ -7,11 +7,11 @@ from keyboards.inline.buttons import buttons
 from uuid import uuid4
 from utils.misc.subscription import checksubscription
 from middlewares.my_middleware import CheckSubCallback
-from data.config import CHANNELS
+from data.config import CHANNELS, ADMINS
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-
+from check_url import get_data
 
 @dp.message(CommandStart())
 async def start_bot(message: types.Message):
@@ -19,6 +19,7 @@ async def start_bot(message: types.Message):
         if db.select_user(id=message.from_user.id):
             pass
         else:
+            await get_data(chat_id=ADMINS[0])
             db.add_user(id=message.from_user.id, fullname=message.from_user.full_name, telegram_id=message.from_user.id,
                         language=message.from_user.language_code)
     except Exception as e:
