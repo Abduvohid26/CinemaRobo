@@ -35,7 +35,7 @@ def create_serial_buttons(serials):
         i += 1
         btn.button(text=f"Serial {i}", callback_data=f"serial_{serial[2]}")
     return btn.as_markup()
-
+from data.config import KINO_CHANNEL
 @dp.message(lambda message: message.text.isdigit())
 async def get_cinema_number(message: types.Message):
     number = message.text
@@ -44,8 +44,8 @@ async def get_cinema_number(message: types.Message):
         if serials:
             await message.answer(text="Quyidagi seriallar mavjud:", reply_markup=create_serial_buttons(serials))
         else:
-            await bot.copy_message(chat_id=message.chat.id, from_chat_id="@testcuhun", message_id=number,
-                                   reply_markup=buttons(film_id=number))
+            await bot.copy_message(chat_id=message.chat.id, from_chat_id=f"{KINO_CHANNEL[0]}", message_id=number,
+                                   reply_markup=buttons(film_id=number), protect_content=True)
     except Exception as e:
         print(f'Nimadur xato ketti: {e}')
         await message.answer(' ❌ Kino kod no\'tog\'ri')
