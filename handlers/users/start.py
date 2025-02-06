@@ -102,12 +102,55 @@ async def inline_handler(inline_query: types.InlineQuery):
 
 
 
+# @dp.callback_query(CheckSubCallback.filter())
+# async def check_query(call: types.CallbackQuery):
+#     await call.answer(cache_time=0)
+#     user = call.from_user
+#     final_status = True
+#     btn = InlineKeyboardBuilder()
+
+#     if CHANNELS:
+#         for channel in CHANNELS:
+#             try:
+#                 status = await checksubscription(user_id=user.id, channel=channel)
+#                 final_status = final_status and status
+#                 chat = await bot.get_chat(chat_id=channel)
+#                 invite_link = await chat.export_invite_link()
+#                 btn.button(
+#                     text=f"{'✅' if status else '❌'} {chat.title}",
+#                     url=invite_link
+#                 )
+#             except Exception as e:
+#                 print(f"Kanalga kirish yoki linkni olishda xato: {e}")
+
+#         if final_status:
+#             await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
+#                          f"✍🏻 Kino kodini yuboring.")
+#         else:
+#             btn.button(
+#                 text="🔄 Tekshirish",
+#                 callback_data=CheckSubCallback(check=False)
+#             )
+#             btn.adjust(1)
+#             data = await call.message.answer(
+#                 text="Iltimos avval barcha kanallarga azo boling !"
+#             )
+#             await asyncio.sleep(5)
+#             await data.delete()
+#     else:
+#         await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
+#                          f"✍🏻 Kino kodini yuboring.")
+
 @dp.callback_query(CheckSubCallback.filter())
 async def check_query(call: types.CallbackQuery):
+    print(call, 'call', call.data, 'call data')
     await call.answer(cache_time=0)
     user = call.from_user
     final_status = True
     btn = InlineKeyboardBuilder()
+
+    # Eski xabarni o‘chiramiz
+    await call.message.delete()
 
     if CHANNELS:
         for channel in CHANNELS:
@@ -115,7 +158,7 @@ async def check_query(call: types.CallbackQuery):
                 status = await checksubscription(user_id=user.id, channel=channel)
                 final_status = final_status and status
                 chat = await bot.get_chat(chat_id=channel)
-                invite_link = await chat.export_invite_link()
+                invite_link = await chat.export_invite_link()  # Har safar yangi link yaratamiz
                 btn.button(
                     text=f"{'✅' if status else '❌'} {chat.title}",
                     url=invite_link
@@ -124,19 +167,20 @@ async def check_query(call: types.CallbackQuery):
                 print(f"Kanalga kirish yoki linkni olishda xato: {e}")
 
         if final_status:
-            await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
-                         f"✍🏻 Kino kodini yuboring.")
+            await call.message.answer(
+                f"Assalomu alaykum {user.full_name}!\n\n✍🏻 Kino kodini yuboring."
+            )
         else:
             btn.button(
                 text="🔄 Tekshirish",
                 callback_data=CheckSubCallback(check=False)
             )
             btn.adjust(1)
-            data = await call.message.answer(
-                text="Iltimos avval barcha kanallarga azo boling !"
+            await call.message.answer(
+                text="Iltimos avval barcha kanallarga a’zo bo‘ling!",
+                reply_markup=btn.as_markup()
             )
-            await asyncio.sleep(5)
-            await data.delete()
     else:
-        await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
-                         f"✍🏻 Kino kodini yuboring.")
+        await call.message.answer(
+            f"Assalomu alaykum {user.full_name}!\n\n✍🏻 Kino kodini yuboring."
+        )
