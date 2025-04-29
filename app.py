@@ -22,6 +22,7 @@ async def main():
         try:
             db.create_table_users()
             db.create_cinema_table()
+            db.create_table_channel_ids()
         except:
             pass
         #############################

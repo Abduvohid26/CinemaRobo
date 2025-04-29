@@ -7,7 +7,7 @@ from keyboards.inline.buttons import buttons
 from uuid import uuid4
 from utils.misc.subscription import checksubscription
 from middlewares.my_middleware import CheckSubCallback
-from data.config import CHANNELS, ADMINS
+from data.config import ADMINS
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -16,12 +16,14 @@ from check_url import get_data
 @dp.message(CommandStart())
 async def start_bot(message: types.Message):
     try:
-        if db.select_user(id=message.from_user.id):
+        if db.select_user(telegram_id=message.from_user.id):
             pass
         else:
-            await get_data(chat_id=ADMINS[0])
-            db.add_user(id=message.from_user.id, fullname=message.from_user.full_name, telegram_id=message.from_user.id,
+            db.add_user(fullname=message.from_user.full_name, telegram_id=message.from_user.id,
                         language=message.from_user.language_code)
+            await get_data(chat_id=ADMINS[0])
+
+            
     except Exception as e:
         print(f'Nimadur xato ketti: {e}')
 
@@ -36,6 +38,8 @@ def create_serial_buttons(serials):
         btn.button(text=f"Serial {i}", callback_data=f"serial_{serial[2]}")
     return btn.as_markup()
 from data.config import KINO_CHANNEL
+
+
 @dp.message(lambda message: message.text.isdigit())
 async def get_cinema_number(message: types.Message):
     number = message.text
@@ -143,7 +147,6 @@ async def inline_handler(inline_query: types.InlineQuery):
 
 @dp.callback_query(CheckSubCallback.filter())
 async def check_query(call: types.CallbackQuery):
-    print(call, 'call', call.data, 'call data')
     await call.answer(cache_time=0)
     user = call.from_user
     final_status = True
@@ -151,13 +154,13 @@ async def check_query(call: types.CallbackQuery):
 
     # Eski xabarni o‘chiramiz
     await call.message.delete()
-
+    CHANNELS = db.select_all_channels()
     if CHANNELS:
         for channel in CHANNELS:
             try:
-                status = await checksubscription(user_id=user.id, channel=channel)
+                status = await checksubscription(user_id=user.id, channel=channel[-1])
                 final_status = final_status and status
-                chat = await bot.get_chat(chat_id=channel)
+                chat = await bot.get_chat(chat_id=channel[-1])
                 invite_link = await chat.export_invite_link()  # Har safar yangi link yaratamiz
                 btn.button(
                     text=f"{'✅' if status else '❌'} {chat.title}",
@@ -167,9 +170,15 @@ async def check_query(call: types.CallbackQuery):
                 print(f"Kanalga kirish yoki linkni olishda xato: {e}")
 
         if final_status:
-            await call.message.answer(
-                f"Assalomu alaykum {user.full_name}!\n\n✍🏻 Kino kodini yuboring."
-            )
+            if not db.select_user(telegram_id=call.message.from_user.id):
+                db.add_user(fullname=call.message.from_user.full_name, telegram_id=call.message.from_user.id,
+                            language=call.message.from_user.language_code)
+                await get_data(chat_id=ADMINS[0])
+
+                
+            await call.message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=call.message.from_user.full_name, link=f"tg://user?id={call.message.from_user.id}")} botimizga xush kelibsiz.\n\n'
+                                   f'✍🏻 Kino kodini yuboring'))
+            return
         else:
             btn.button(
                 text="🔄 Tekshirish",
@@ -181,6 +190,11 @@ async def check_query(call: types.CallbackQuery):
                 reply_markup=btn.as_markup()
             )
     else:
-        await call.message.answer(
-            f"Assalomu alaykum {user.full_name}!\n\n✍🏻 Kino kodini yuboring."
-        )
+        if not db.select_user(telegram_id=call.message.from_user.id):
+                db.add_user(fullname=call.message.from_user.full_name, telegram_id=call.message.from_user.id,
+                            language=call.message.from_user.language_code)
+                await get_data(chat_id=ADMINS[0])
+
+                
+        await call.message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=call.message.from_user.full_name, link=f"tg://user?id={call.message.from_user.id}")} botimizga xush kelibsiz.\n\n'
+                                   f'✍🏻 Kino kodini yuboring'))

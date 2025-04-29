@@ -33,3 +33,11 @@ class VideoChannelSerialSendExist(StatesGroup):
     start = State()
     caption = State()
 
+
+
+class ChannelAdd(StatesGroup):
+    start = State()
+
+class ChannelDelete(StatesGroup):
+    start = State()
+    finish = State()

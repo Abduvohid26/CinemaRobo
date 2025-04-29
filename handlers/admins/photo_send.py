@@ -85,6 +85,7 @@ async def get_url(message: types.Message, state: FSMContext):
         await message.answer(text, reply_markup=get_before_url())
         await state.set_state(PhotoSend.url)
 
+import asyncio
 
 @dp.message(F.text == '📤 Yuborish', IsBotAdmin(), PhotoSend.check)
 async def send_message(message: types.Message, state: FSMContext):
@@ -102,6 +103,8 @@ async def send_message(message: types.Message, state: FSMContext):
         btn.adjust(1)
         counter = 0
         for i in users:
+            if counter % 25 == 0:
+                await asyncio.sleep(1)
             try:
                 await bot.send_photo(chat_id=i[-2], photo=data['photo'], reply_markup=btn.as_markup(row_width=1), caption=data['caption'])
                 counter += 1
@@ -111,6 +114,8 @@ async def send_message(message: types.Message, state: FSMContext):
     else:
         counter = 0
         for i in users:
+            if counter % 25 == 0:
+                await asyncio.sleep(1)
             try:
                 await bot.send_photo(photo=data['photo'], chat_id=i[-2])
                 counter += 1

@@ -25,7 +25,6 @@ from aiogram.types.input_file import FSInputFile
 
 
 async def get_data(chat_id):
-    print('salom')
     db_path = 'data/main.db'
     if os.path.exists(db_path):
         doc = FSInputFile(path=db_path)

@@ -30,11 +30,10 @@ class Database:
     def create_table_users(self):
         sql = """
         CREATE TABLE Users (
-            id int ,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             fullname varchar(255),
             telegram_id varchar(20) UNIQUE,
-            language varchar(3),
-            PRIMARY KEY (id)
+            language varchar(3)
             );
 """
         self.execute(sql, commit=True)
@@ -46,12 +45,12 @@ class Database:
         ])
         return sql, tuple(parameters.values())
 
-    def add_user(self, id: int, fullname: str, telegram_id: str = None, language: str = 'uz'):
+    def add_user(self, fullname: str, telegram_id: str = None, language: str = 'uz'):
 
         sql = """
-        INSERT INTO Users(id, fullname,telegram_id, language) VALUES(?, ?, ?, ?)
+        INSERT INTO Users(fullname,telegram_id, language) VALUES(?, ?, ?)
         """
-        self.execute(sql, parameters=(id, fullname, telegram_id, language), commit=True)
+        self.execute(sql, parameters=(fullname, telegram_id, language), commit=True)
 
     def select_all_users(self):
         sql = """
@@ -63,16 +62,19 @@ class Database:
         # SQL_EXAMPLE = "SELECT * FROM Users where id=1 AND Name='John'"
         sql = "SELECT * FROM Users WHERE "
         sql, parameters = self.format_args(sql, kwargs)
-
         return self.execute(sql, parameters=parameters, fetchone=True)
+    
     def count_users(self):
         return self.execute("SELECT COUNT(*) FROM Users;", fetchone=True)
+    
     def update_user_fullname(self, email, telegram_id):
 
         sql = f"""
         UPDATE Users SET fullname=? WHERE telegram_id=?
         """
         return self.execute(sql, parameters=(telegram_id, id), commit=True)
+    
+    
     def delete_users(self):
         self.execute("DELETE FROM Users WHERE TRUE", commit=True)
 
@@ -112,3 +114,45 @@ class Database:
         sql, parameters = self.format_args(sql, kwargs)
         return self.execute(sql, parameters=parameters, fetchone=True)
 
+
+#     def create_table_users(self):
+#         sql = """
+#         CREATE TABLE Channels (
+#             id INTEGER PRIMARY KEY AUTOINCREMENT,
+#             channel_id INTEGER UNIQUE NOT NULL
+#             );
+# """
+#         self.execute(sql, commit=True)
+
+
+    def create_table_channel_ids(self):
+            sql = """
+            CREATE TABLE IF NOT EXISTS Channels (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                channel_id VARCHAR(25) UNIQUE NOT NULL
+                );
+    """
+            self.execute(sql, commit=True)
+
+    def select_all_channels(self):
+        sql = """
+        SELECT * FROM Channels
+        """
+        return self.execute(sql, fetchall=True)
+
+    def channel_delete(self, channel_id):
+        sql = """
+        DELETE FROM Channels WHERE channel_id = ?
+        """
+        self.execute(sql, (channel_id,), commit=True)
+
+    def add_channel(self, channel_id: str):
+        sql = """
+        INSERT OR IGNORE INTO Channels (channel_id) VALUES (?)
+        """
+        self.execute(sql, parameters=(channel_id,), commit=True)
+
+    def select_channel(self, **kwargs):
+        sql = "SELECT * FROM Channels WHERE "
+        sql, parameters = self.format_args(sql, kwargs)
+        return self.execute(sql, parameters=parameters, fetchone=True)

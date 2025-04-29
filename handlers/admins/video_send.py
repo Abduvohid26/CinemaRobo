@@ -88,6 +88,7 @@ async def get_url(message: types.Message, state: FSMContext):
         await message.answer(text, reply_markup=get_before_url())
         await state.set_state(VideoSend.url)
 
+import asyncio
 
 
 @dp.message(F.text == '📤 Yuborish', IsBotAdmin(), VideoSend.check)
@@ -106,6 +107,8 @@ async def send_message(message: types.Message, state: FSMContext):
         btn.adjust(1)
         counter = 0
         for i in users:
+            if counter % 25 == 0:
+                await asyncio.sleep(1)
             try:
                 await bot.send_video(chat_id=i[-2], video=data['video'], reply_markup=btn.as_markup(row_width=1), caption=data['caption'])
                 counter += 1
@@ -116,6 +119,8 @@ async def send_message(message: types.Message, state: FSMContext):
         counter = 0
         for i in users:
             try:
+                if counter % 25 == 0:
+                    await asyncio.sleep(1)
                 await bot.send_video(video=data['video'], chat_id=i[-2])
                 counter += 1
             except Exception as e:

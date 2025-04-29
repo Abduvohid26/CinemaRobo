@@ -84,6 +84,7 @@ async def get_url(message: types.Message, state: FSMContext):
         await message.answer(text, reply_markup=get_before_url())
         await state.set_state(TextSend.url)
 
+import asyncio
 
 @dp.message(F.text == '📤 Yuborish', IsBotAdmin(), TextSend.check)
 async def send_message(message: types.Message, state: FSMContext):
@@ -101,6 +102,8 @@ async def send_message(message: types.Message, state: FSMContext):
         btn.adjust(1)
         counter = 0
         for i in users:
+            if counter % 25 == 0:
+                await asyncio.sleep(1)
             try:
                 await bot.send_message(chat_id=i[-2], text=data['text'], reply_markup=btn.as_markup(row_width=1))
                 counter += 1
@@ -111,6 +114,8 @@ async def send_message(message: types.Message, state: FSMContext):
         text = data['text']
         counter = 0
         for i in users:
+            if counter % 25 == 0:
+                await asyncio.sleep(1)
             try:
                 await bot.send_message(text=text, chat_id=i[-2])
                 counter += 1

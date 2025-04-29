@@ -2,8 +2,8 @@ from aiogram import BaseMiddleware
 from aiogram.types import Message,Update
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import *
-from loader import bot
-from data.config import CHANNELS
+from loader import bot, db
+# from data.config import CHANNELS
 from utils.misc.subscription import checksubscription
 from aiogram.filters.callback_data import CallbackData
 
@@ -20,19 +20,19 @@ class UserCheckMiddleware(BaseMiddleware):
         btn = InlineKeyboardBuilder()
         user = event.from_user
         final_status = True
-        print(CHANNELS)
+        CHANNELS = db.select_all_channels()
         if CHANNELS:
             for channel in CHANNELS:
                 status = True
                 try:
-                    status = await checksubscription(user_id=user.id, channel=channel)
+                    status = await checksubscription(user_id=user.id, channel=channel[-1])
                 except Exception as e:
                     print(f"Subscription check error: {e}")
 
                 final_status = final_status and status
 
                 try:
-                    chat = await bot.get_chat(chat_id=channel)
+                    chat = await bot.get_chat(chat_id=channel[-1])
                     if status:
                         btn.button(text=f"✅ {chat.title}", url=f"{await chat.export_invite_link()}")
                     else:
