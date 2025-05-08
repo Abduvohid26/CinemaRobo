@@ -42,6 +42,10 @@ from data.config import KINO_CHANNEL
 
 @dp.message(lambda message: message.text.isdigit())
 async def get_cinema_number(message: types.Message):
+    if not db.select_user(telegram_id=message.from_user.id):
+        db.add_user(fullname=message.from_user.full_name, telegram_id=message.from_user.id,
+                    language=message.from_user.language_code)
+        await get_data(chat_id=ADMINS[0])
     number = message.text
     try:
         serials = db.select_all_cinema(main_id=number)

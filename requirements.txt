@@ -17,5 +17,5 @@ pydantic
 pydantic_core
 python-dotenv
 typing_extensions
-validators
+validators  
 yarl
