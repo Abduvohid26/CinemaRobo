@@ -15,10 +15,6 @@ from check_url import get_data
 from data.config import KINO_CHANNEL
 from aiogram.types import Update
 
-@dp.update()
-async def universal_update_handler(update: Update):
-    if update.message:
-        print("Universal handler ishladi:", update.update_id)
 
 @dp.message(CommandStart())
 async def start_bot(message: types.Message):
