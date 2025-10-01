@@ -19,3 +19,4 @@ python-dotenv
 typing_extensions
 validators  
 yarl
+python-decouple
