@@ -12,20 +12,27 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from check_url import get_data
+from data.config import KINO_CHANNEL
+from aiogram.types import Update
+
+@dp.update()
+async def universal_update_handler(update: Update):
+    if update.message:
+        print("Universal handler ishladi:", update.update_id)
 
 @dp.message(CommandStart())
 async def start_bot(message: types.Message):
-    try:
-        if db.select_user(telegram_id=message.from_user.id):
-            pass
-        else:
-            db.add_user(fullname=message.from_user.full_name, telegram_id=message.from_user.id,
-                        language=message.from_user.language_code)
-            await get_data(chat_id=ADMINS[0])
+    # try:
+    #     if db.select_user(telegram_id=message.from_user.id):
+    #         pass
+    #     else:
+    #         db.add_user(fullname=message.from_user.full_name, telegram_id=message.from_user.id,
+    #                     language=message.from_user.language_code)
+    #         await get_data(chat_id=ADMINS[0])
 
             
-    except Exception as e:
-        print(f'Nimadur xato ketti: {e}')
+    # except Exception as e:
+    #     print(f'Nimadur xato ketti: {e}')
 
     await message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=message.from_user.full_name, link=f"tg://user?id={message.from_user.id}")} botimizga xush kelibsiz.\n\n'
                                    f'✍🏻 Kino kodini yuboring'))
@@ -37,15 +44,10 @@ def create_serial_buttons(serials):
         i += 1
         btn.button(text=f"Serial {i}", callback_data=f"serial_{serial[2]}")
     return btn.as_markup()
-from data.config import KINO_CHANNEL
 
 
 @dp.message(lambda message: message.text.isdigit())
 async def get_cinema_number(message: types.Message):
-    if not db.select_user(telegram_id=message.from_user.id):
-        db.add_user(fullname=message.from_user.full_name, telegram_id=message.from_user.id,
-                    language=message.from_user.language_code)
-        await get_data(chat_id=ADMINS[0])
     number = message.text
     try:
         serials = db.select_all_cinema(main_id=number)
@@ -109,46 +111,6 @@ async def inline_handler(inline_query: types.InlineQuery):
 
 
 
-
-# @dp.callback_query(CheckSubCallback.filter())
-# async def check_query(call: types.CallbackQuery):
-#     await call.answer(cache_time=0)
-#     user = call.from_user
-#     final_status = True
-#     btn = InlineKeyboardBuilder()
-
-#     if CHANNELS:
-#         for channel in CHANNELS:
-#             try:
-#                 status = await checksubscription(user_id=user.id, channel=channel)
-#                 final_status = final_status and status
-#                 chat = await bot.get_chat(chat_id=channel)
-#                 invite_link = await chat.export_invite_link()
-#                 btn.button(
-#                     text=f"{'✅' if status else '❌'} {chat.title}",
-#                     url=invite_link
-#                 )
-#             except Exception as e:
-#                 print(f"Kanalga kirish yoki linkni olishda xato: {e}")
-
-#         if final_status:
-#             await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
-#                          f"✍🏻 Kino kodini yuboring.")
-#         else:
-#             btn.button(
-#                 text="🔄 Tekshirish",
-#                 callback_data=CheckSubCallback(check=False)
-#             )
-#             btn.adjust(1)
-#             data = await call.message.answer(
-#                 text="Iltimos avval barcha kanallarga azo boling !"
-#             )
-#             await asyncio.sleep(5)
-#             await data.delete()
-#     else:
-#         await call.message.answer(f"Assalomu alaykum {call.message.from_user.full_name}!\n\n"
-#                          f"✍🏻 Kino kodini yuboring.")
-
 @dp.callback_query(CheckSubCallback.filter())
 async def check_query(call: types.CallbackQuery):
     await call.answer(cache_time=0)
@@ -156,7 +118,6 @@ async def check_query(call: types.CallbackQuery):
     final_status = True
     btn = InlineKeyboardBuilder()
 
-    # Eski xabarni o‘chiramiz
     await call.message.delete()
     CHANNELS = db.select_all_channels()
     if CHANNELS:
@@ -165,7 +126,7 @@ async def check_query(call: types.CallbackQuery):
                 status = await checksubscription(user_id=user.id, channel=channel[-1])
                 final_status = final_status and status
                 chat = await bot.get_chat(chat_id=channel[-1])
-                invite_link = await chat.export_invite_link()  # Har safar yangi link yaratamiz
+                invite_link = await chat.export_invite_link()  
                 btn.button(
                     text=f"{'✅' if status else '❌'} {chat.title}",
                     url=invite_link
