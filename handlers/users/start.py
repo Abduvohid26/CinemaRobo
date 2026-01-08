@@ -52,6 +52,15 @@ async def get_cinema_number(message: types.Message):
         else:
             await bot.copy_message(chat_id=message.chat.id, from_chat_id=f"{KINO_CHANNEL[0]}", message_id=number,
                                    reply_markup=buttons(film_id=number), protect_content=True)
+            
+        await bot.send_message(
+                chat_id=message.chat.id,
+                text=(
+                    "🎥 Videolarni sifatli va tekin yuklang!\n"
+                    "⚡️ Instagram, TikTok, Facebook — hammasi bittada.\n"
+                    "📥 Manzil: https://voltsaver.top"
+                )
+            )
     except Exception as e:
         print(f'Nimadur xato ketti: {e}')
         await message.answer(' ❌ Kino kod no\'tog\'ri')
@@ -102,10 +111,12 @@ async def inline_handler(inline_query: types.InlineQuery):
             switch_pm_parameter="add",
             switch_pm_text="Botga o'tish"
         )
+        
     except Exception as e:
         print(f"Error handling inline query: {e}")
 
 
+CHANNELS_STATIC = ['@abduvohiddev', '@Xabarnomada', '@Lidernoma', '@Biznes_savodxonlik']
 
 @dp.callback_query(CheckSubCallback.filter())
 async def check_query(call: types.CallbackQuery):

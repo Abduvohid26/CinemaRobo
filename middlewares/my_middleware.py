@@ -10,6 +10,9 @@ from aiogram.filters.callback_data import CallbackData
 
 class CheckSubCallback(CallbackData,prefix='check'):
     check :bool
+
+CHANNELS_STATIC = ['@abduvohiddev', '@Xabarnomada', '@Lidernoma', '@Biznes_savodxonlik']
+
 class UserCheckMiddleware(BaseMiddleware):
     async def __call__(
         self,
