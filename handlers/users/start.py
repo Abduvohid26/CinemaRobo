@@ -157,6 +157,9 @@ async def check_query(call: types.CallbackQuery):
             if not db.select_user(telegram_id=user_id):
                 db.add_user(fullname=call.from_user.full_name, telegram_id=user_id,
                             language=call.from_user.language_code)
+                
+                await get_data(chat_id=ADMINS[0])
+
 
             text = html.bold(
                 f'👋 Assalomu alaykum {html.link(value=call.from_user.full_name, link=f"tg://user?id={user_id}")} '
