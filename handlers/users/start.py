@@ -124,10 +124,10 @@ CHANNELS_STATIC = ['@abduvohiddev', '@Xabarnomada', '@Lidernoma', '@Biznes_savod
 
 @dp.callback_query(CheckSubCallback.filter())
 async def check_query(call: types.CallbackQuery):
-    await call.answer(cache_time=0)
     user_id = call.from_user.id
     final_status = True
     btn = InlineKeyboardBuilder()
+    not_subscribed_count = 0 
 
     CHANNELS = db.select_all_channels()
     
@@ -135,14 +135,10 @@ async def check_query(call: types.CallbackQuery):
         for channel in CHANNELS:
             channel_id = channel[-1] 
             try:
-                # Obunani tekshirish
                 status = await checksubscription(user_id=user_id, channel=channel_id)
-                
                 if not status:
-                    # Agar obuna bo'lmagan bo'lsa, final_status ni False qilamiz
                     final_status = False
-                    
-                    # Kanal ma'lumotlarini olish
+                    not_subscribed_count += 1
                     chat = await bot.get_chat(chat_id=channel_id)
                     
                     if chat.username:
@@ -150,29 +146,18 @@ async def check_query(call: types.CallbackQuery):
                     else:
                         invite_link = chat.invite_link or await chat.export_invite_link()
 
-                    # Faqat obuna bo'lmagan kanalni tugmaga qo'shamiz
-                    btn.button(
-                        text=f"❌ {chat.title}",
-                        url=invite_link
-                    )
+                    btn.button(text=f"❌ {chat.title}", url=invite_link)
             except Exception as e:
-                print(f"Kanalda xatolik ({channel_id}): {e}")
+                print(f"Xatolik: {e}")
 
         if final_status:
-            # Hammasiga obuna bo'lgan bo'lsa
+            await call.answer("Tabriklaymiz, barcha kanallarga a'zo bo'ldingiz!", show_alert=False)
             await call.message.delete()
             
-            # Bazaga qo'shish (agar yo'q bo'lsa)
             if not db.select_user(telegram_id=user_id):
-                db.add_user(
-                    fullname=call.from_user.full_name, 
-                    telegram_id=user_id,
-                    language=call.from_user.language_code
-                )
-                # Admin xabar berish (agar kerak bo'lsa)
-                # await get_data(chat_id=ADMINS[0]) 
+                db.add_user(fullname=call.from_user.full_name, telegram_id=user_id,
+                            language=call.from_user.language_code)
 
-            # Siz aytgan chiroyli matnli xabar
             text = html.bold(
                 f'👋 Assalomu alaykum {html.link(value=call.from_user.full_name, link=f"tg://user?id={user_id}")} '
                 f'botimizga xush kelibsiz.\n\n'
@@ -181,18 +166,24 @@ async def check_query(call: types.CallbackQuery):
             await call.message.answer(text)
             
         else:
-            # Hali obuna bo'lmagan kanallari bo'lsa
+            await call.answer(
+                f"Siz hali {not_subscribed_count} ta kanalga a'zo bo'lmadingiz!", 
+                show_alert=True 
+            )
+
             btn.button(text="🔄 Tekshirish", callback_data=CheckSubCallback(check=False))
             btn.adjust(1)
             
-            # Faqat markupni yangilaymiz (xabar matni o'zgarmaydi, tugmalar kamayadi)
+            new_text = (
+                f"🔔 *Davom etish uchun barcha kanallarga obuna bo‘ling!*\n\n"
+                f"⚠️ Sizda yana {not_subscribed_count} ta kanal qoldi."
+            )
+
             try:
-                await call.message.edit_reply_markup(reply_markup=btn.as_markup())
-            except:
-                # Agar markup o'zgarmagan bo'lsa (masalan, hali ham o'sha kanallar) xato bermasligi uchun
+                await call.message.edit_text(text=new_text, reply_markup=btn.as_markup(), parse_mode="Markdown")
+            except Exception:
                 pass
     else:
-        # Agar bazada kanallar bo'lmasa, to'g'ridan-to'g'ri kirgazish
         await call.message.delete()
         text = html.bold(
             f'👋 Assalomu alaykum {html.link(value=call.from_user.full_name, link=f"tg://user?id={user_id}")} '
