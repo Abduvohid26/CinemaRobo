@@ -15,6 +15,7 @@ from check_url import get_data
 from data.config import KINO_CHANNEL
 from aiogram.types import Update
 import logging
+from aiogram import html
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,6 @@ async def inline_handler(inline_query: types.InlineQuery):
 
 CHANNELS_STATIC = ['@abduvohiddev', '@Xabarnomada', '@Lidernoma', '@Biznes_savodxonlik']
 
-
 @dp.callback_query(CheckSubCallback.filter())
 async def check_query(call: types.CallbackQuery):
     await call.answer(cache_time=0)
@@ -130,47 +130,76 @@ async def check_query(call: types.CallbackQuery):
     btn = InlineKeyboardBuilder()
 
     CHANNELS = db.select_all_channels()
+    
     if CHANNELS:
         for channel in CHANNELS:
-            channel_id = channel[-1] # Bazadagi ID yoki username
+            channel_id = channel[-1] 
             try:
                 # Obunani tekshirish
                 status = await checksubscription(user_id=user_id, channel=channel_id)
-                final_status = final_status and status
                 
-                chat = await bot.get_chat(chat_id=channel_id)
-                
-                # Havolani aniqlash: username bo'lsa o'shani, bo'lmasa tayyor linkni olamiz
-                if chat.username:
-                    invite_link = f"https://t.me/{chat.username}"
-                else:
-                    # Agar bazada link saqlamagan bo'lsangiz, vaqtinchalik yechim:
-                    invite_link = chat.invite_link or await chat.export_invite_link()
+                if not status:
+                    # Agar obuna bo'lmagan bo'lsa, final_status ni False qilamiz
+                    final_status = False
+                    
+                    # Kanal ma'lumotlarini olish
+                    chat = await bot.get_chat(chat_id=channel_id)
+                    
+                    if chat.username:
+                        invite_link = f"https://t.me/{chat.username}"
+                    else:
+                        invite_link = chat.invite_link or await chat.export_invite_link()
 
-                logger.info(f"{invite_link}: Link started")
-
-                btn.button(
-                    text=f"{'✅' if status else '❌'} {chat.title}",
-                    url=invite_link
-                )
+                    # Faqat obuna bo'lmagan kanalni tugmaga qo'shamiz
+                    btn.button(
+                        text=f"❌ {chat.title}",
+                        url=invite_link
+                    )
             except Exception as e:
-                print(f"Kanalda xatolik: {e}")
+                print(f"Kanalda xatolik ({channel_id}): {e}")
 
         if final_status:
+            # Hammasiga obuna bo'lgan bo'lsa
             await call.message.delete()
-            if not db.select_user(telegram_id=user_id):
-                db.add_user(fullname=call.from_user.full_name, telegram_id=user_id,
-                            language=call.from_user.language_code)
             
-            await call.message.answer(f"✅ Xush kelibsiz! Kino kodini yuboring.")
+            # Bazaga qo'shish (agar yo'q bo'lsa)
+            if not db.select_user(telegram_id=user_id):
+                db.add_user(
+                    fullname=call.from_user.full_name, 
+                    telegram_id=user_id,
+                    language=call.from_user.language_code
+                )
+                # Admin xabar berish (agar kerak bo'lsa)
+                # await get_data(chat_id=ADMINS[0]) 
+
+            # Siz aytgan chiroyli matnli xabar
+            text = html.bold(
+                f'👋 Assalomu alaykum {html.link(value=call.from_user.full_name, link=f"tg://user?id={user_id}")} '
+                f'botimizga xush kelibsiz.\n\n'
+                f'✍🏻 Kino kodini yuboring'
+            )
+            await call.message.answer(text)
+            
         else:
+            # Hali obuna bo'lmagan kanallari bo'lsa
             btn.button(text="🔄 Tekshirish", callback_data=CheckSubCallback(check=False))
             btn.adjust(1)
-            # Faqat markupni o'zgartiramiz, xabarni o'chirib qayta yubormaslik tavsiya etiladi
+            
+            # Faqat markupni yangilaymiz (xabar matni o'zgarmaydi, tugmalar kamayadi)
             try:
                 await call.message.edit_reply_markup(reply_markup=btn.as_markup())
             except:
+                # Agar markup o'zgarmagan bo'lsa (masalan, hali ham o'sha kanallar) xato bermasligi uchun
                 pass
+    else:
+        # Agar bazada kanallar bo'lmasa, to'g'ridan-to'g'ri kirgazish
+        await call.message.delete()
+        text = html.bold(
+            f'👋 Assalomu alaykum {html.link(value=call.from_user.full_name, link=f"tg://user?id={user_id}")} '
+            f'botimizga xush kelibsiz.\n\n'
+            f'✍🏻 Kino kodini yuboring'
+        )
+        await call.message.answer(text)
 
 # @dp.callback_query(CheckSubCallback.filter())
 # async def check_query(call: types.CallbackQuery):
