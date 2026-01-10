@@ -19,6 +19,7 @@ async def main():
         dp.startup.register(start)
         dp.shutdown.register(shutdown)
         dp.message.middleware(UserCheckMiddleware())
+        
         dp.message.middleware(LoggingMiddleware())
         # Create Users Table
         try:
