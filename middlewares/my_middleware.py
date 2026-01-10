@@ -1,5 +1,5 @@
 from aiogram import BaseMiddleware
-from aiogram.types import Message,Update
+from aiogram.types import Message,Update, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import *
 from loader import bot, db
@@ -18,14 +18,16 @@ CHANNELS_STATIC = ['@abduvohiddev', '@Xabarnomada', '@Lidernoma', '@Biznes_savod
 class UserCheckMiddleware(BaseMiddleware):
     async def __call__(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-        event: Update,
+        handler: Callable[[Any, Dict[str, Any]], Awaitable[Any]],
+        event: Any,
         data: Dict[str, Any]
     ) -> Any:
-        # Faqat xabarlar va callbacklar uchun ishlasin
-        if not event.message and not event.callback_query:
+
+        # Faqat Message va CallbackQuery uchun
+        if not isinstance(event, (Message, CallbackQuery)):
             return await handler(event, data)
 
+        # user ni to‘g‘ri olish
         user = event.from_user
         if not user:
             return await handler(event, data)
@@ -39,32 +41,44 @@ class UserCheckMiddleware(BaseMiddleware):
 
         for channel in CHANNELS:
             channel_id = channel[-1]
-            status = await checksubscription(user_id=user.id, channel=channel_id)
-            final_status = final_status and status
-            
-            # Har safar get_chat qilmaslik uchun bazada kanal nomini va linkini saqlash kerak
-            # Hozircha oddiyroq usul:
+            status = await checksubscription(
+                user_id=user.id,
+                channel=channel_id
+            )
+            final_status &= status
+
             if not status:
                 try:
                     chat = await bot.get_chat(channel_id)
-                    link = f"https://t.me/{chat.username}" if chat.username else await chat.export_invite_link()
-                    logger.info(f"{link}: Link Middleware")
+                    link = (
+                        f"https://t.me/{chat.username}"
+                        if chat.username
+                        else await chat.export_invite_link()
+                    )
+                    logger.info("%s: Link Middleware", link)
                     btn.button(text=f"❌ {chat.title}", url=link)
-                except:
+                except Exception as e:
+                    logger.error("Channel error: %s", e)
                     continue
 
         if final_status:
             return await handler(event, data)
-        else:
-            btn.button(text="🔄 Tekshirish", callback_data=CheckSubCallback(check=False))
-            btn.adjust(1)
-            
-            text = "🔔 *Davom etish uchun barcha kanallarga obuna bo‘ling!*"
-            if event.message:
-                await event.message.answer(text, reply_markup=btn.as_markup())
-            elif event.callback_query:
-                await event.callback_query.message.answer(text, reply_markup=btn.as_markup())
-            return # Handlerga o'tmaydi
+
+        # ❌ Obuna bo‘lmaganlar uchun
+        btn.button(
+            text="🔄 Tekshirish",
+            callback_data=CheckSubCallback(check=False)
+        )
+        btn.adjust(1)
+
+        text = "🔔 *Davom etish uchun barcha kanallarga obuna bo‘ling!*"
+
+        if isinstance(event, Message):
+            await event.answer(text, reply_markup=btn.as_markup())
+        elif isinstance(event, CallbackQuery):
+            await event.message.answer(text, reply_markup=btn.as_markup())
+
+        return
 
 # class UserCheckMiddleware(BaseMiddleware):
 #     async def __call__(
