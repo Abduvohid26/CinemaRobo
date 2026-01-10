@@ -118,59 +118,110 @@ async def inline_handler(inline_query: types.InlineQuery):
 
 CHANNELS_STATIC = ['@abduvohiddev', '@Xabarnomada', '@Lidernoma', '@Biznes_savodxonlik']
 
+
 @dp.callback_query(CheckSubCallback.filter())
 async def check_query(call: types.CallbackQuery):
     await call.answer(cache_time=0)
-    user = call.from_user
+    user_id = call.from_user.id
     final_status = True
     btn = InlineKeyboardBuilder()
 
-    await call.message.delete()
     CHANNELS = db.select_all_channels()
     if CHANNELS:
         for channel in CHANNELS:
+            channel_id = channel[-1] # Bazadagi ID yoki username
             try:
-                status = await checksubscription(user_id=user.id, channel=channel[-1])
+                # Obunani tekshirish
+                status = await checksubscription(user_id=user_id, channel=channel_id)
                 final_status = final_status and status
-                chat = await bot.get_chat(chat_id=channel[-1])
-                invite_link = await chat.export_invite_link()  
+                
+                chat = await bot.get_chat(chat_id=channel_id)
+                
+                # Havolani aniqlash: username bo'lsa o'shani, bo'lmasa tayyor linkni olamiz
+                if chat.username:
+                    invite_link = f"https://t.me/{chat.username}"
+                else:
+                    # Agar bazada link saqlamagan bo'lsangiz, vaqtinchalik yechim:
+                    invite_link = chat.invite_link or await chat.export_invite_link()
+
+                print(invite_link, "Link")
+
                 btn.button(
                     text=f"{'✅' if status else '❌'} {chat.title}",
                     url=invite_link
                 )
             except Exception as e:
-                print(f"Kanalga kirish yoki linkni olishda xato: {e}")
+                print(f"Kanalda xatolik: {e}")
 
         if final_status:
-            if not db.select_user(telegram_id=call.message.from_user.id):
-                db.add_user(fullname=call.message.from_user.full_name, telegram_id=call.message.from_user.id,
-                            language=call.message.from_user.language_code)
-                await get_data(chat_id=ADMINS[0])
-
-                
-            await call.message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=call.message.from_user.full_name, link=f"tg://user?id={call.message.from_user.id}")} botimizga xush kelibsiz.\n\n'
-                                   f'✍🏻 Kino kodini yuboring'))
-            return
+            await call.message.delete()
+            if not db.select_user(telegram_id=user_id):
+                db.add_user(fullname=call.from_user.full_name, telegram_id=user_id,
+                            language=call.from_user.language_code)
+            
+            await call.message.answer(f"✅ Xush kelibsiz! Kino kodini yuboring.")
         else:
-            btn.button(
-                text="🔄 Tekshirish",
-                callback_data=CheckSubCallback(check=False)
-            )
+            btn.button(text="🔄 Tekshirish", callback_data=CheckSubCallback(check=False))
             btn.adjust(1)
-            await call.message.answer(
-                text=(
-                    "🔔 *Davom etish uchun barcha kanallarga obuna bo‘ling!*\n\n"
-                    "❗️ Agar obuna bo‘lishda xatolik yuz bergan bo‘lsa, "
-                    "*/start* buyrug‘ini qayta bosib, yana urinib ko‘ring."
-                ),
-                reply_markup=btn.as_markup()
-            )
-    else:
-        if not db.select_user(telegram_id=call.message.from_user.id):
-                db.add_user(fullname=call.message.from_user.full_name, telegram_id=call.message.from_user.id,
-                            language=call.message.from_user.language_code)
-                await get_data(chat_id=ADMINS[0])
+            # Faqat markupni o'zgartiramiz, xabarni o'chirib qayta yubormaslik tavsiya etiladi
+            try:
+                await call.message.edit_reply_markup(reply_markup=btn.as_markup())
+            except:
+                pass
+
+# @dp.callback_query(CheckSubCallback.filter())
+# async def check_query(call: types.CallbackQuery):
+#     await call.answer(cache_time=0)
+#     user = call.from_user
+#     final_status = True
+#     btn = InlineKeyboardBuilder()
+
+#     await call.message.delete()
+#     CHANNELS = db.select_all_channels()
+#     if CHANNELS:
+#         for channel in CHANNELS:
+#             try:
+#                 status = await checksubscription(user_id=user.id, channel=channel[-1])
+#                 final_status = final_status and status
+#                 chat = await bot.get_chat(chat_id=channel[-1])
+#                 invite_link = await chat.export_invite_link()  
+#                 btn.button(
+#                     text=f"{'✅' if status else '❌'} {chat.title}",
+#                     url=invite_link
+#                 )
+#             except Exception as e:
+#                 print(f"Kanalga kirish yoki linkni olishda xato: {e}")
+
+#         if final_status:
+#             if not db.select_user(telegram_id=call.message.from_user.id):
+#                 db.add_user(fullname=call.message.from_user.full_name, telegram_id=call.message.from_user.id,
+#                             language=call.message.from_user.language_code)
+#                 await get_data(chat_id=ADMINS[0])
 
                 
-        await call.message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=call.message.from_user.full_name, link=f"tg://user?id={call.message.from_user.id}")} botimizga xush kelibsiz.\n\n'
-                                   f'✍🏻 Kino kodini yuboring'))
+#             await call.message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=call.message.from_user.full_name, link=f"tg://user?id={call.message.from_user.id}")} botimizga xush kelibsiz.\n\n'
+#                                    f'✍🏻 Kino kodini yuboring'))
+#             return
+#         else:
+#             btn.button(
+#                 text="🔄 Tekshirish",
+#                 callback_data=CheckSubCallback(check=False)
+#             )
+#             btn.adjust(1)
+#             await call.message.answer(
+#                 text=(
+#                     "🔔 *Davom etish uchun barcha kanallarga obuna bo‘ling!*\n\n"
+#                     "❗️ Agar obuna bo‘lishda xatolik yuz bergan bo‘lsa, "
+#                     "*/start* buyrug‘ini qayta bosib, yana urinib ko‘ring."
+#                 ),
+#                 reply_markup=btn.as_markup()
+#             )
+#     else:
+#         if not db.select_user(telegram_id=call.message.from_user.id):
+#                 db.add_user(fullname=call.message.from_user.full_name, telegram_id=call.message.from_user.id,
+#                             language=call.message.from_user.language_code)
+#                 await get_data(chat_id=ADMINS[0])
+
+                
+#         await call.message.answer(html.bold(f'👋 Assalomu alaykum {html.link(value=call.message.from_user.full_name, link=f"tg://user?id={call.message.from_user.id}")} botimizga xush kelibsiz.\n\n'
+#                                    f'✍🏻 Kino kodini yuboring'))
