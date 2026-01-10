@@ -32,5 +32,12 @@ async def main():
     finally:
         await bot.session.close()
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        force=True 
+    )
+
     asyncio.run(main())
+

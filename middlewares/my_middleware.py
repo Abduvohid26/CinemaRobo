@@ -6,7 +6,8 @@ from loader import bot, db
 # from data.config import CHANNELS
 from utils.misc.subscription import checksubscription
 from aiogram.filters.callback_data import CallbackData
-
+import logging
+logger = logging.getLogger(__name__)
 
 class CheckSubCallback(CallbackData,prefix='check'):
     check :bool
@@ -47,7 +48,7 @@ class UserCheckMiddleware(BaseMiddleware):
                 try:
                     chat = await bot.get_chat(channel_id)
                     link = f"https://t.me/{chat.username}" if chat.username else await chat.export_invite_link()
-                    print(link, "Middleware Link")
+                    logger.info(f"{link}: Link Middleware")
                     btn.button(text=f"❌ {chat.title}", url=link)
                 except:
                     continue

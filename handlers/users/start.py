@@ -14,6 +14,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from check_url import get_data
 from data.config import KINO_CHANNEL
 from aiogram.types import Update
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dp.message(CommandStart())
@@ -144,7 +147,7 @@ async def check_query(call: types.CallbackQuery):
                     # Agar bazada link saqlamagan bo'lsangiz, vaqtinchalik yechim:
                     invite_link = chat.invite_link or await chat.export_invite_link()
 
-                print(invite_link, "Link")
+                logger.info(f"{invite_link}: Link started")
 
                 btn.button(
                     text=f"{'✅' if status else '❌'} {chat.title}",
